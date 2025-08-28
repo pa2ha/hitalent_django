@@ -1,7 +1,7 @@
 ## Докер запускаю командой ```docker compose up --build```
 
  ## тесты можно запустить следующей командой в терминале
-```docker exec -it hitalent_django-web-1 pytest```
+```docker exec -it hitalent_django-web-1 pytest -v```
 
 Вывод должен быть такой
 
