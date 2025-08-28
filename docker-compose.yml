@@ -1,0 +1,75 @@
+version: '3'
+
+services:
+  web:
+    build: ./project
+    command: >
+        bash -c "python manage.py runserver 0.0.0.0:8000"
+    volumes:
+      - ./project/:/usr/src/app/
+      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+    ports:
+      - 8000:8000
+    tty: true
+    env_file:
+      - ./.env.dev
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+  db:
+    image: postgres:16.1
+    volumes:
+      - ./postgres_data:/var/lib/postgresql/data/
+      - ./project/:/usr/src/app/
+#      - /etc/timezone:/etc/timezone:ro
+      - /etc/localtime:/etc/localtime:ro
+      - ./logs/postgre:/usr/src/app/logs/postgre
+    ports:
+      - 5432:5432
+    environment:
+      - TZ=Europe/Moscow
+      - PGTZ=Europe/Moscow
+      - POSTGRES_USER=superdjango
+      - POSTGRES_PASSWORD=Testik!
+      - POSTGRES_DB=questionnaire
+    command: postgres -c logging_collector=on -c log_statement=mod -c log_min_duration_statement=-1 -c log_file_mode=0644 -c log_min_messages=LOG -c log_directory=/usr/src/app/logs/postgre -c log_filename=%Y-%m-%d.log -c log_rotation_age=10min -c log_line_prefix='%d|%u|%t|'
+    healthcheck:
+      test: ["CMD", "pg_isready", "-q", "-d", "questionnaire", "-U", "superdjango"]
+      interval: 5s
+      retries: 15
+      start_period: 15s
+  celery:
+    build: ./project
+    command: bash -c "celery --app=questionnaire worker --loglevel=info  -n worker1@%h & celery --app=questionnaire worker --loglevel=info -B -n worker5@%h"
+    volumes:
+      - ./project:/usr/src/app
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - web
+      - redis
+      - db
+
+  celery-flower:
+    build: ./project
+    command: celery --app=questionnaire flower
+    volumes:
+      - ./project:/usr/src/app
+    environment:
+      - SECRET_KEY=dbaa1_i7%*3r9-=z-+_mz4r-!qeed@(-a_r(g@k8jo8y3r27%m
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - CELERY_BROKER=redis://redis:6379/0
+      - CELERY_BACKEND=redis://redis:6379/0
+    ports:
+      - 5555:5555
+    env_file:
+      - ./.env.dev
+    depends_on:
+      - web
+      - redis
+  redis:
+    image: redis:6.2
+
