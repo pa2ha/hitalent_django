@@ -24,7 +24,7 @@ services:
     volumes:
       - ./postgres_data:/var/lib/postgresql/data/
       - /etc/localtime:/etc/localtime:ro
-      - ./project/logs/postgre:/var/lib/postgresql/data/log/
+      - ./project/logs/postgre:/usr/src/app/logs/postgre
     ports:
       - 5432:5432
     environment:
@@ -33,7 +33,7 @@ services:
       - POSTGRES_USER=superdjango
       - POSTGRES_PASSWORD=Testik!
       - POSTGRES_DB=questionnaire
-    command: postgres -c logging_collector=on -c log_statement=mod -c log_min_duration_statement=-1 -c log_file_mode=0644 -c log_min_messages=LOG -c log_filename=%Y-%m-%d.log -c log_rotation_age=10min -c log_line_prefix='%d|%u|%t|'
+    command: postgres -c logging_collector=on -c log_statement=mod -c log_min_duration_statement=-1 -c log_file_mode=0644 -c log_directory=/usr/src/app/logs/postgre -c log_min_messages=LOG -c log_filename=%Y-%m-%d.log -c log_rotation_age=10min -c log_line_prefix='%d|%u|%t|'
     healthcheck:
       test: ["CMD", "pg_isready", "-q", "-d", "questionnaire", "-U", "superdjango"]
       interval: 5s
