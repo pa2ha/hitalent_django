@@ -7,7 +7,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # create necessary dirs and files
 folders_to_create = ['logs/celery', 'logs/django', 'logs/postgre',
                      'media', 'staticfiles', 'questionnaireapp/migrations',
-                     'Users/migrations', 'postgres_data']
+                     'Users/migrations']
 
 for folder in folders_to_create:
     path_f = os.path.join(BASE_DIR, folder)
